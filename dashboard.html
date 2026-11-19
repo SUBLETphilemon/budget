@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dashboard">
+<title>Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000000;
+    --tile: #1a1a1c;
+    --tile-2: #242427;
+    --text: #f2f2f0;
+    --muted: #8d8d93;
+    --line: #2c2c30;
+    --accent: #9fbbdc;
+    --radius: 26px;
+    --font: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+  }
+  button, input, textarea { font: inherit; color: inherit; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px;
+  }
+
+  /* Grille de widgets */
+  .grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+  }
+  .tile {
+    background: var(--tile);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .s4 { grid-column: span 4; }
+  .s6 { grid-column: span 6; }
+  h2 { font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 14px; }
+
+  .s12 { grid-column: span 12; }
+
+  /* Applications */
+  .apps { flex-direction: row; justify-content: space-around; gap: 12px; padding: 18px 24px; }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none; color: var(--text); font-size: 13px; padding: 4px 8px; border-radius: 16px; }
+  .app .ico { width: 56px; height: 56px; border-radius: 16px; background: var(--c); display: grid; place-items: center; transition: transform .15s; }
+  .app .ico svg { width: 28px; height: 28px; opacity: .85; }
+  .app:hover .ico { transform: scale(1.06); }
+  .app:active .ico { transform: scale(.96); }
+
+  /* Tuile lien ScoDoc */
+  .linktile { flex-direction: row; align-items: center; gap: 16px; padding: 16px 24px; text-decoration: none; color: var(--text); transition: background .15s; }
+  .linktile:hover { background: var(--tile-2); }
+  .ico-sm { width: 44px; height: 44px; border-radius: 13px; background: #3a3a40; display: grid; place-items: center; flex: none; }
+  .ico-sm svg { width: 24px; height: 24px; opacity: .85; }
+  .lt { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  .lt b { font-weight: 500; }
+  .lt span { color: var(--muted); font-size: 13px; }
+  .chev { color: var(--muted); font-size: 26px; line-height: 1; }
+
+  /* Retour */
+  .topbar { max-width: 1280px; margin: 0 auto 14px; }
+  .back { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; background: var(--tile); color: var(--text); text-decoration: none; font-size: 14px; font-weight: 500; transition: background .15s; }
+  .back:hover { background: var(--tile-2); }
+
+  /* Horloge */
+  .clock { justify-content: space-between; min-height: 200px; }
+  #time { font-size: clamp(64px, 7vw, 92px); font-weight: 200; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
+  #sec { font-size: 22px; font-weight: 300; color: var(--muted); margin-left: 6px; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+  #date { color: var(--muted); text-transform: capitalize; font-size: 16px; }
+
+  /* Météo */
+  .weather-main { display: flex; align-items: baseline; gap: 14px; }
+  #temp { font-size: 58px; font-weight: 200; line-height: 1; letter-spacing: -.02em; }
+  #cond { color: var(--muted); }
+  #place { margin-top: 8px; background: none; border: 0; cursor: pointer; color: var(--text); padding: 0; text-align: left; font-weight: 500; align-self: flex-start; }
+  #place:hover { color: var(--accent); }
+  .weather-extra { margin-top: 8px; color: var(--muted); font-size: 13px; }
+  .days { display: flex; gap: 10px; margin-top: auto; padding-top: 16px; font-size: 13px; color: var(--muted); }
+  .days div { flex: 1; background: var(--tile-2); border-radius: 14px; padding: 8px 10px; }
+  .days b { display: block; font-weight: 500; color: var(--text); text-transform: capitalize; }
+  #cityForm { display: none; margin-top: 10px; gap: 8px; }
+  #cityForm.open { display: flex; }
+  #cityInput { flex: 1; min-width: 0; background: var(--tile-2); border: 0; border-radius: 999px; padding: 8px 14px; }
+  #cityInput::placeholder { color: var(--muted); }
+  .btn { background: var(--tile-2); border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer; color: var(--text); transition: background .15s; }
+  .btn:hover { background: #303034; }
+  .btn.primary { background: var(--accent); color: #0a0a0c; font-weight: 600; }
+  .btn.primary:hover { background: #b4cde8; }
+
+  /* Minuteur */
+  #timerDisplay { font-size: 58px; font-weight: 200; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -.02em; }
+  #timerDisplay.done { color: var(--accent); }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 12px; }
+  .timer-controls { display: flex; gap: 8px; align-items: center; margin-top: auto; flex-wrap: wrap; }
+  #timerMin { width: 60px; background: var(--tile-2); border: 0; border-radius: 999px; padding: 8px 6px; text-align: center; }
+  .unit { color: var(--muted); font-size: 13px; }
+
+  /* Notes */
+  .notes { min-height: 220px; }
+  #notes { flex: 1; width: 100%; min-height: 180px; resize: none; background: transparent; border: 0; line-height: 1.6; font-size: 15.5px; }
+  #notes::placeholder { color: var(--muted); }
+  #notes:focus-visible { outline: none; }
+  #notesStatus { margin-top: 8px; font-size: 12px; color: var(--muted); min-height: 18px; }
+
+  /* Actus */
+  .news-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .news-head button { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 13px; }
+  .news-head button:hover { color: var(--text); }
+  .news { list-style: none; max-height: 420px; overflow-y: auto; margin: 0 -8px; padding: 0 8px; scrollbar-width: thin; scrollbar-color: var(--tile-2) transparent; }
+  .news li + li { border-top: 1px solid var(--line); }
+  .news a { display: block; padding: 12px 0; color: var(--text); text-decoration: none; }
+  .news a:hover .t { color: var(--accent); }
+  .news .t { font-size: 15px; line-height: 1.4; display: block; transition: color .15s; }
+  .news .m { display: block; margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+  .state { color: var(--muted); font-size: 14px; padding: 12px 0; }
+
+  @media (max-width: 1000px) {
+    .s4 { grid-column: span 6; }
+    .clock { grid-column: span 12; min-height: 170px; }
+  }
+  @media (max-width: 680px) {
+    body { padding-left: 14px; padding-right: 14px; }
+    .grid { gap: 12px; }
+    .s4, .s6 { grid-column: span 12; }
+    .tile { padding: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<nav class="topbar"><a class="back" href="index.html">‹ Accueil</a></nav>
+<main class="grid">
+
+  <section class="tile s4 clock" aria-label="Horloge">
+    <div><span id="time">--:--</span><span id="sec">--</span></div>
+    <p id="date"></p>
+  </section>
+
+  <section class="tile s4" aria-label="Météo" aria-live="polite">
+    <h2>Météo</h2>
+    <div class="weather-main"><span id="temp">–</span><span id="cond">Chargement…</span></div>
+    <button id="place" type="button" title="Changer de ville">Localisation…</button>
+    <form id="cityForm">
+      <input id="cityInput" type="text" placeholder="Ville" aria-label="Nom de la ville" autocomplete="off">
+      <button class="btn primary" type="submit">Valider</button>
+    </form>
+    <p class="weather-extra" id="wextra"></p>
+    <div class="days" id="days"></div>
+  </section>
+
+  <section class="tile s4" aria-label="Minuteur">
+    <h2>Minuteur</h2>
+    <div id="timerDisplay">05:00</div>
+    <div class="presets" id="presets">
+      <button class="btn" data-min="1" type="button">1 min</button>
+      <button class="btn" data-min="5" type="button">5 min</button>
+      <button class="btn" data-min="10" type="button">10 min</button>
+      <button class="btn" data-min="25" type="button">25 min</button>
+    </div>
+    <div class="timer-controls">
+      <input id="timerMin" type="number" min="1" max="999" value="5" aria-label="Durée en minutes">
+      <span class="unit">min</span>
+      <button class="btn primary" id="timerStart" type="button">Démarrer</button>
+      <button class="btn" id="timerReset" type="button">Réinitialiser</button>
+    </div>
+  </section>
+
+  <section class="tile s12 apps" aria-label="Applications">
+    <a class="app" href="whatsapp://" style="--c:#17492e">
+      <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.7-1.2A9 9 0 1 0 12 3z" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8.5c.3 2.6 2.9 5.2 5.5 5.5l1.2-1.4-2-1-.9.8c-.9-.4-1.7-1.200-2.100-2.100l.8-.9-1-2z" fill="#fff"/></svg></span>
+      <span class="name">WhatsApp</span>
+    </a>
+    <a class="app" href="deezer://" style="--c:#3f2a66">
+      <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="#fff"><rect x="3" y="15" width="3.200" height="4" rx=".6"/><rect x="7.600" y="12" width="3.200" height="7" rx=".6"/><rect x="12.200" y="9" width="3.200" height="10" rx=".6"/><rect x="16.800" y="6" width="3.200" height="13" rx=".6"/></svg></span>
+      <span class="name">Deezer</span>
+    </a>
+    <a class="app" href="tel:" style="--c:#17492e">
+      <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="#fff"><path d="M6.600 10.800a15 15 0 0 0 6.600 6.600l2.200-2.200a1 1 0 0 1 1-.25 11.400 11.400 0 0 0 3.600.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.500a1 1 0 0 1 1 1c0 1.250.2 2.450.6 3.600a1 1 0 0 1-.25 1z"/></svg></span>
+      <span class="name">Téléphone</span>
+    </a>
+    <a class="app" href="waze://" style="--c:#17475e">
+      <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.500c-4.400 0-8 3.200-8 7.400 0 2.200 1 4.100 2.600 5.500-.1 1.200-.6 2.100-1.400 2.800 1.600 0 3-.5 4-1.300.9.2 1.800.3 2.800.3 4.400 0 8-3.200 8-7.400S16.400 3.500 12 3.500z"/><path d="M9.500 13.200c.7.8 1.700 1.200 2.500 1.200s1.800-.4 2.500-1.200"/><circle cx="9.500" cy="9.800" r=".6" fill="#fff"/><circle cx="14.500" cy="9.800" r=".6" fill="#fff"/></svg></span>
+      <span class="name">Waze</span>
+    </a>
+  </section>
+
+  <a class="tile s12 linktile" href="https://notes.iut-acy.univ-smb.fr/" target="_blank" rel="noopener noreferrer" aria-label="Ouvrir les notes ScoDoc">
+    <span class="ico-sm"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 16h5"/></svg></span>
+    <span class="lt"><b>Notes ScoDoc</b><span>IUT d’Annecy · USMB</span></span>
+    <span class="chev" aria-hidden="true">›</span>
+  </a>
+
+  <section class="tile s6" aria-label="Actualités Mediapart">
+    <div class="news-head"><h2>Mediapart</h2><button type="button" data-refresh="mediapart">Actualiser</button></div>
+    <ul class="news" id="mediapart"><li class="state">Chargement…</li></ul>
+  </section>
+
+  <section class="tile s6" aria-label="Presse locale">
+    <div class="news-head"><h2 id="localTitle">Presse locale</h2><button type="button" data-refresh="local">Actualiser</button></div>
+    <ul class="news" id="local"><li class="state">Chargement…</li></ul>
+  </section>
+
+  <section class="tile s12 notes" aria-label="Notes">
+    <h2>Notes</h2>
+    <textarea id="notes" placeholder="Écris ici, c’est enregistré automatiquement." aria-label="Notes rapides"></textarea>
+    <p id="notesStatus"></p>
+  </section>
+
+
+</main>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  /* ---------- Horloge ---------- */
+  function tick() {
+    var d = new Date();
+    $('#time').textContent = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    $('#sec').textContent = String(d.getSeconds()).padStart(2, '0');
+    $('#date').textContent = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+  tick(); setInterval(tick, 1000);
+
+  /* ---------- Localisation ---------- */
+  var loc = null;
+  try { loc = JSON.parse(store.get('dash.loc')); } catch (e) {}
+
+  function saveLoc(l) { loc = l; store.set('dash.loc', JSON.stringify(l)); }
+
+  function reverseCity(lat, lon) {
+    return fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=fr')
+      .then(function (r) { return r.json(); })
+      .then(function (j) { return j.city || j.locality || j.principalSubdivision || 'Ma position'; })
+      .catch(function () { return 'Ma position'; });
+  }
+
+  function locate() {
+    return new Promise(function (resolve, reject) {
+      if (loc) return resolve(loc);
+      if (!navigator.geolocation) return reject();
+      navigator.geolocation.getCurrentPosition(function (p) {
+        reverseCity(p.coords.latitude, p.coords.longitude).then(function (city) {
+          var l = { lat: p.coords.latitude, lon: p.coords.longitude, city: city };
+          saveLoc(l); resolve(l);
+        });
+      }, reject, { timeout: 10000, maximumAge: 600000 });
+    });
+  }
+
+  function useGps() {
+    store.set('dash.loc', '');
+    loc = null;
+    return start();
+  }
+
+  /* ---------- Météo ---------- */
+  var WMO = {
+    0: 'Ciel dégagé', 1: 'Plutôt dégagé', 2: 'Partiellement nuageux', 3: 'Couvert',
+    45: 'Brouillard', 48: 'Brouillard givrant',
+    51: 'Bruine légère', 53: 'Bruine', 55: 'Bruine dense',
+    61: 'Pluie faible', 63: 'Pluie', 65: 'Forte pluie',
+    71: 'Neige faible', 73: 'Neige', 75: 'Forte neige', 77: 'Grains de neige',
+    80: 'Averses légères', 81: 'Averses', 82: 'Fortes averses',
+    85: 'Averses de neige', 86: 'Fortes averses de neige',
+    95: 'Orage', 96: 'Orage et grêle', 99: 'Orage et forte grêle'
+  };
+
+  function loadWeather(l) {
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + l.lat + '&longitude=' + l.lon +
+      '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+      '&timezone=auto&forecast_days=4';
+    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var c = j.current, d = j.daily;
+      $('#temp').textContent = Math.round(c.temperature_2m) + '°';
+      $('#cond').textContent = WMO[c.weather_code] || '';
+      $('#place').textContent = l.city;
+      $('#wextra').textContent = 'Ressenti ' + Math.round(c.apparent_temperature) + '° · Vent ' +
+        Math.round(c.wind_speed_10m) + ' km/h · Humidité ' + c.relative_humidity_2m + ' %';
+      var html = '';
+      for (var i = 1; i < 4; i++) {
+        var day = new Date(d.time[i] + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'short' });
+        html += '<div><b>' + day + '</b>' + Math.round(d.temperature_2m_max[i]) + '° / ' +
+          Math.round(d.temperature_2m_min[i]) + '°</div>';
+      }
+      $('#days').innerHTML = html;
+    }).catch(function () {
+      $('#cond').textContent = 'Météo indisponible';
+    });
+  }
+
+  /* ---------- Flux d’actualités ---------- */
+  function rss(url) {
+    return fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(url))
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (j.status !== 'ok') throw new Error('rss'); return j.items; });
+  }
+
+  function ago(dateStr) {
+    var t = new Date(dateStr.replace(' ', 'T') + (dateStr.indexOf('T') < 0 ? 'Z' : '')).getTime();
+    if (isNaN(t)) return '';
+    var m = Math.round((Date.now() - t) / 60000);
+    if (m < 1) return 'à l’instant';
+    if (m < 60) return 'il y a ' + m + ' min';
+    var h = Math.round(m / 60);
+    if (h < 24) return 'il y a ' + h + ' h';
+    return 'il y a ' + Math.round(h / 24) + ' j';
+  }
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  function render(sel, items, showSource) {
+    var ul = $(sel);
+    if (!items.length) { ul.innerHTML = '<li class="state">Aucun article pour le moment.</li>'; return; }
+    ul.innerHTML = items.slice(0, 10).map(function (it) {
+      var title = it.title, source = '';
+      if (showSource) {
+        var k = title.lastIndexOf(' - ');
+        if (k > 0) { source = title.slice(k + 3); title = title.slice(0, k); }
+      }
+      var meta = [source, ago(it.pubDate)].filter(Boolean).join(' · ');
+      return '<li><a href="' + esc(it.link) + '" target="_blank" rel="noopener noreferrer"><span class="t">' +
+        esc(title) + '</span><span class="m">' + esc(meta) + '</span></a></li>';
+    }).join('');
+  }
+
+  function fail(sel) {
+    $(sel).innerHTML = '<li class="state">Impossible de charger les articles. Vérifie ta connexion puis clique sur Actualiser.</li>';
+  }
+
+  function loadMediapart() {
+    return rss('https://www.mediapart.fr/articles/feed').then(function (items) { render('#mediapart', items, false); })
+      .catch(function () { fail('#mediapart'); });
+  }
+
+  function loadLocal() {
+    if (!loc) { $('#local').innerHTML = '<li class="state">Choisis une ville pour voir la presse locale.</li>'; return Promise.resolve(); }
+    $('#localTitle').textContent = 'Presse locale · ' + loc.city;
+    var q = encodeURIComponent(loc.city);
+    return rss('https://news.google.com/rss/search?q=' + q + '&hl=fr&gl=FR&ceid=FR:fr')
+      .then(function (items) { render('#local', items, true); })
+      .catch(function () { fail('#local'); });
+  }
+
+  document.querySelectorAll('[data-refresh]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (b.dataset.refresh === 'mediapart') loadMediapart(); else loadLocal();
+    });
+  });
+
+  /* ---------- Démarrage / changement de ville ---------- */
+  function start() {
+    return locate().then(function (l) {
+      loadWeather(l); loadLocal();
+    }).catch(function () {
+      $('#cond').textContent = 'Position non autorisée';
+      $('#place').textContent = 'Choisir une ville';
+      $('#cityForm').classList.add('open');
+      $('#local').innerHTML = '<li class="state">Choisis une ville pour voir la presse locale.</li>';
+    });
+  }
+
+  $('#place').addEventListener('click', function () {
+    $('#cityForm').classList.toggle('open');
+    if ($('#cityForm').classList.contains('open')) $('#cityInput').focus();
+  });
+
+  $('#cityForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('#cityInput').value.trim();
+    if (!name) { useGps(); $('#cityForm').classList.remove('open'); return; }
+    fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=fr&name=' + encodeURIComponent(name))
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j.results || !j.results.length) { $('#cond').textContent = 'Ville introuvable'; return; }
+        var r = j.results[0];
+        saveLoc({ lat: r.latitude, lon: r.longitude, city: r.name });
+        $('#cityInput').value = '';
+        $('#cityForm').classList.remove('open');
+        loadWeather(loc); loadLocal();
+      })
+      .catch(function () { $('#cond').textContent = 'Recherche impossible'; });
+  });
+  $('#cityInput').placeholder = 'Ville (vide = ma position)';
+
+  loadMediapart();
+  start();
+  setInterval(function () { if (loc) loadWeather(loc); }, 15 * 60000);
+  setInterval(function () { loadMediapart(); loadLocal(); }, 20 * 60000);
+
+  /* ---------- Minuteur ---------- */
+  var tTotal = 5 * 60, tLeft = tTotal, tEnd = 0, tId = null;
+  var disp = $('#timerDisplay'), startBtn = $('#timerStart');
+
+  function fmt(s) {
+    var m = Math.floor(s / 60), r = s % 60;
+    return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+  }
+  function show() { disp.textContent = fmt(tLeft); }
+
+  function beep() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.35, 0.7].forEach(function (d) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.value = 880; o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime + d);
+        g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + d + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + d + 0.28);
+        o.start(ctx.currentTime + d); o.stop(ctx.currentTime + d + 0.3);
+      });
+    } catch (e) {}
+  }
+
+  function stopTick() { clearInterval(tId); tId = null; }
+
+  function run() {
+    tLeft = Math.max(0, Math.round((tEnd - Date.now()) / 1000));
+    show();
+    document.title = tId ? fmt(tLeft) + ' · Dashboard' : 'Dashboard';
+    if (tLeft <= 0) {
+      stopTick(); disp.classList.add('done');
+      startBtn.textContent = 'Démarrer'; document.title = 'Terminé · Dashboard';
+      beep();
+    }
+  }
+
+  function setDuration(min) {
+    min = Math.max(1, Math.min(999, parseInt(min, 10) || 1));
+    stopTick(); disp.classList.remove('done');
+    tTotal = tLeft = min * 60; $('#timerMin').value = min;
+    startBtn.textContent = 'Démarrer'; document.title = 'Dashboard'; show();
+  }
+
+  startBtn.addEventListener('click', function () {
+    if (tId) { stopTick(); startBtn.textContent = 'Reprendre'; document.title = 'Dashboard'; return; }
+    if (tLeft <= 0) tLeft = tTotal;
+    disp.classList.remove('done');
+    tEnd = Date.now() + tLeft * 1000;
+    tId = setInterval(run, 250); run();
+    startBtn.textContent = 'Pause';
+  });
+  $('#timerReset').addEventListener('click', function () { setDuration($('#timerMin').value); });
+  $('#timerMin').addEventListener('change', function () { setDuration(this.value); });
+  document.querySelectorAll('#presets .btn').forEach(function (b) {
+    b.addEventListener('click', function () { setDuration(b.dataset.min); });
+  });
+  show();
+
+  /* ---------- Notes ---------- */
+  var notes = $('#notes'), status = $('#notesStatus'), saveT = null;
+  var saved = store.get('dash.notes');
+  if (saved) notes.value = saved;
+  notes.addEventListener('input', function () {
+    status.textContent = '';
+    clearTimeout(saveT);
+    saveT = setTimeout(function () {
+      store.set('dash.notes', notes.value);
+      status.textContent = 'Enregistré';
+    }, 400);
+  });
+
+})();
+</script>
+</body>
+</html>
